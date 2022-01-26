@@ -2,9 +2,9 @@ package ru.aureys.core;
 
 public interface ExecutionContext {
 
-    void inContext(Event event);
+    void inContext(EventMessage event);
 
-    void failWith(Event event);
+    void failWith(EventMessage event);
 
     void commit();
 

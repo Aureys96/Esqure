@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
-public enum ConcurrentBus implements Bus, AutoCloseable {
+public enum ConcurrentBus implements IBus, AutoCloseable {
 
     INSTANCE;
 

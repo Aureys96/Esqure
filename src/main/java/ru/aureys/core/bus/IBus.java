@@ -2,7 +2,7 @@ package ru.aureys.core.bus;
 
 import ru.aureys.core.Registration;
 
-public interface Bus {
+public interface IBus {
 
     <T extends BusMessage> void addRegistration(final Registration<T> registration);
 

@@ -13,7 +13,7 @@ public class CommandHandler extends Handler {
 
 
     @SuppressWarnings("WeakerAccess")
-    protected ExecutionContext begin(Command command) {
+    protected ExecutionContext begin(CommandMessage command) {
         return new DefaultExecutionContext(command);
     }
 
@@ -21,12 +21,12 @@ public class CommandHandler extends Handler {
 
         private static final int INITIAL_CAPACITY = 10;
 
-        private final Command command;
+        private final CommandMessage command;
         private final String id = UUID.randomUUID().toString();
-        private final List<Event> fails = new ArrayList<>(INITIAL_CAPACITY);
-        private final List<Event> executionUnit = new ArrayList<>(INITIAL_CAPACITY);
+        private final List<EventMessage> fails = new ArrayList<>(INITIAL_CAPACITY);
+        private final List<EventMessage> executionUnit = new ArrayList<>(INITIAL_CAPACITY);
 
-        private DefaultExecutionContext(Command command) {
+        private DefaultExecutionContext(CommandMessage command) {
             this.command = requireNonNull(command);
             log.debug("{} created", this);
         }
@@ -38,7 +38,7 @@ public class CommandHandler extends Handler {
                 executionUnit.forEach(CommandHandler.super::emit);
                 log.debug("{} {} unit(s) committed", this, executionUnit.size());
             } else {
-                for (Event fail : fails) {
+                for (EventMessage fail : fails) {
                     CommandHandler.super.emit(fail);
                 }
                 log.debug("{} rollback", this);
@@ -48,13 +48,13 @@ public class CommandHandler extends Handler {
         }
 
         @Override
-        public void inContext(Event event) {
+        public void inContext(EventMessage event) {
             executionUnit.add(requireNonNull(event));
             log.debug("{} append {} to execution context", this, event.getClass().getSimpleName());
         }
 
         @Override
-        public void failWith(Event event) {
+        public void failWith(EventMessage event) {
             fails.add(requireNonNull(event));
             log.debug("{} append {} to rollback action", this, event.getClass().getSimpleName());
         }

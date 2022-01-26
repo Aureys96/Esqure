@@ -1,7 +1,7 @@
 package ru.aureys.core;
 
 import org.springframework.stereotype.Component;
-import ru.aureys.core.bus.Bus;
+import ru.aureys.core.bus.IBus;
 import ru.aureys.core.bus.BusFactory;
 import ru.aureys.core.bus.BusMessage;
 
@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 @Component
 public abstract class Handler {
 
-    private final Bus bus = BusFactory.concurrentBus();
+    private final IBus bus = BusFactory.concurrentBus();
 
     private final AtomicBoolean hasHandlers = new AtomicBoolean();
 

@@ -4,9 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.aureys.commands.SimpleCommand;
 import ru.aureys.core.EventHandler;
+import ru.aureys.core.annotation.Handle;
+import ru.aureys.core.annotation.Saga;
 import ru.aureys.events.SimpleEvent;
 
 @Slf4j
+@Saga
 @Component
 public class SimpleSaga extends EventHandler {
 
@@ -14,6 +17,7 @@ public class SimpleSaga extends EventHandler {
         add(SimpleEvent.class, this::handle);
     }
 
+    @Handle
     private void handle(SimpleEvent event) {
         log.info("Event received: {}", event);
 

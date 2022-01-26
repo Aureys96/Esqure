@@ -6,7 +6,7 @@ package ru.aureys.core.bus;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class BusFactory {
 
-    public static Bus concurrentBus() {
+    public static IBus concurrentBus() {
         return ConcurrentBus.INSTANCE;
     }
 

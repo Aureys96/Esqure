@@ -2,11 +2,14 @@ package ru.aureys.commands;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
-import ru.aureys.core.Command;
+import ru.aureys.core.CommandMessage;
+import ru.aureys.core.annotation.Command;
+import ru.aureys.core.annotation.Event;
 
 @Data
+@Command
 @RequiredArgsConstructor
-public class SimpleCommand implements Command {
+public class SimpleCommand implements CommandMessage {
     private final String usefulData;
 }
+
