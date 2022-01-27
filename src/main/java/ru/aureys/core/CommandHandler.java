@@ -1,6 +1,7 @@
 package ru.aureys.core;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.aureys.core.bus.IBus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +10,13 @@ import java.util.UUID;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
-public class CommandHandler extends Handler {
+public class CommandHandler {
 
+    private final IBus bus;
+
+    public CommandHandler(IBus bus) {
+        this.bus = bus;
+    }
 
     @SuppressWarnings("WeakerAccess")
     protected ExecutionContext begin(CommandMessage command) {
@@ -35,11 +41,11 @@ public class CommandHandler extends Handler {
         public void commit() {
             log.debug("{} committing...", this);
             if (fails.isEmpty()) {
-                executionUnit.forEach(CommandHandler.super::emit);
+                executionUnit.forEach(bus::publish);
                 log.debug("{} {} unit(s) committed", this, executionUnit.size());
             } else {
                 for (EventMessage fail : fails) {
-                    CommandHandler.super.emit(fail);
+                    bus.publish(fail);
                 }
                 log.debug("{} rollback", this);
                 fails.clear();

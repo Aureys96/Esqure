@@ -27,8 +27,8 @@ public class SpringAnnotationScanner {
         this.applicationContext = applicationContext;
     }
 
-    public Map<Class<?>, Collection<Consumer<?>>> registerHandlers() {
-        final Map<Class<?>, Collection<Consumer<?>>> registrations = new HashMap<>();
+    public Map<Class<?>, Collection<Consumer<Object>>> registerHandlers() {
+        final Map<Class<?>, Collection<Consumer<Object>>> registrations = new HashMap<>();
         scanForCommandHandlers(Handler.class, registrations);
         scanForCommandHandlers(Saga.class, registrations);
         log.debug("Found {} registered handlers", registrations.size());
@@ -37,13 +37,13 @@ public class SpringAnnotationScanner {
     }
 
     private void scanForCommandHandlers(Class<? extends Annotation> annotationForLookup,
-                                        Map<Class<?>, Collection<Consumer<?>>> registrations) {
+                                        Map<Class<?>, Collection<Consumer<Object>>> registrations) {
         final Map<String, Object> beansWithAnnotation = applicationContext.getBeansWithAnnotation(annotationForLookup);
         beansWithAnnotation.values().forEach(handler -> {
             final Method[] methods = handler.getClass().getDeclaredMethods();
             for (Method method : methods) {
                 if (AnnotationUtils.findAnnotation(method, Handle.class) != null) {
-                    Consumer<?> consumer = (command) -> getConsumer(handler, method, command);
+                    Consumer<Object> consumer = (command) -> getConsumer(handler, method, command);
                     addRegistration(method.getParameterTypes()[0], consumer, registrations);
                 }
             }
@@ -55,8 +55,8 @@ public class SpringAnnotationScanner {
         return method.invoke(handler, command);
     }
 
-    public void addRegistration(Class<?> clazz, Consumer<?> consumer,
-                                Map<Class<?>, Collection<Consumer<?>>> registrations) {
+    public void addRegistration(Class<?> clazz, Consumer<Object> consumer,
+                                Map<Class<?>, Collection<Consumer<Object>>> registrations) {
         registrations.putIfAbsent(clazz, new ArrayList<>());
         registrations.get(clazz).add(consumer);
     }

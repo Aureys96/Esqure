@@ -15,7 +15,6 @@ public class SimpleController {
     private final IBus bus;
 
     @PostMapping("/test")
-    @Traceable
     public String test() {
         CommandMessage command = new SimpleCommand("1234");
         bus.publish(command);
