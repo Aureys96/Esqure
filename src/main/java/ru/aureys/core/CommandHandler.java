@@ -19,7 +19,7 @@ public class CommandHandler {
     }
 
     @SuppressWarnings("WeakerAccess")
-    protected ExecutionContext begin(CommandMessage command) {
+    protected ExecutionContext begin(Object command) {
         return new DefaultExecutionContext(command);
     }
 
@@ -27,12 +27,12 @@ public class CommandHandler {
 
         private static final int INITIAL_CAPACITY = 10;
 
-        private final CommandMessage command;
+        private final Object command;
         private final String id = UUID.randomUUID().toString();
-        private final List<EventMessage> fails = new ArrayList<>(INITIAL_CAPACITY);
-        private final List<EventMessage> executionUnit = new ArrayList<>(INITIAL_CAPACITY);
+        private final List<Object> fails = new ArrayList<>(INITIAL_CAPACITY);
+        private final List<Object> executionUnit = new ArrayList<>(INITIAL_CAPACITY);
 
-        private DefaultExecutionContext(CommandMessage command) {
+        private DefaultExecutionContext(Object command) {
             this.command = requireNonNull(command);
             log.debug("{} created", this);
         }
@@ -44,7 +44,7 @@ public class CommandHandler {
                 executionUnit.forEach(bus::publish);
                 log.debug("{} {} unit(s) committed", this, executionUnit.size());
             } else {
-                for (EventMessage fail : fails) {
+                for (Object fail : fails) {
                     bus.publish(fail);
                 }
                 log.debug("{} rollback", this);
@@ -54,13 +54,13 @@ public class CommandHandler {
         }
 
         @Override
-        public void inContext(EventMessage event) {
+        public void inContext(Object event) {
             executionUnit.add(requireNonNull(event));
             log.debug("{} append {} to execution context", this, event.getClass().getSimpleName());
         }
 
         @Override
-        public void failWith(EventMessage event) {
+        public void failWith(Object event) {
             fails.add(requireNonNull(event));
             log.debug("{} append {} to rollback action", this, event.getClass().getSimpleName());
         }
