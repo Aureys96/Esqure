@@ -2,11 +2,10 @@ package ru.aureys.handlers;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 import ru.aureys.commands.SimpleCommand;
 import ru.aureys.core.CommandHandler;
 import ru.aureys.core.ExecutionContext;
-import ru.aureys.core.annotation.Handle;
+import ru.aureys.core.annotation.HandleCommand;
 import ru.aureys.core.annotation.Handler;
 import ru.aureys.core.bus.IBus;
 import ru.aureys.events.SimpleEvent;
@@ -21,7 +20,7 @@ public class SimpleCommandHandler extends CommandHandler {
         super(bus);
     }
 
-    @Handle
+    @HandleCommand
     public void handle(SimpleCommand command) {
 
         log.info("Command received: {}", command);
