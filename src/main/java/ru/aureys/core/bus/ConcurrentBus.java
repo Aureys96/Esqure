@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import ru.aureys.core.ExceptionHandled;
 import ru.aureys.core.ExecutionContext;
 import ru.aureys.core.scanner.SpringAnnotationScanner;
 
@@ -45,13 +46,18 @@ public class ConcurrentBus implements IBus, AutoCloseable {
     public void publish(Object message) {
         executor.execute(() -> {
             final Collection<Consumer<Object>> eventConsumers = eventRegistrations.get(message.getClass());
-            if (CollectionUtils.isEmpty(eventConsumers)) {
-                final Collection<BiConsumer<Object, ExecutionContext>> commandConsumers =
-                        commandRegistrations.get(message.getClass());
+            final Collection<BiConsumer<Object, ExecutionContext>> commandConsumers =
+                    commandRegistrations.get(message.getClass());
+            if (!CollectionUtils.isEmpty(commandConsumers)) {
                 commandConsumers.forEach(consumer -> consumer.accept(message, null));
 
-            } else {
+            } else if (!CollectionUtils.isEmpty(eventConsumers)){
                 eventConsumers.forEach(consumer -> consumer.accept(message));
+            } else if (message instanceof ExceptionHandled){
+                log.error("ExceptionHandled event received: {}", message);
+                log.warn("You should consider implementing dedicated ErrorSaga handler for this event!");
+            } else {
+                log.error("No handler registered for event of type: {}", message.getClass());
             }
         });
     }

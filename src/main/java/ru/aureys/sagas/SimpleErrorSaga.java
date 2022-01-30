@@ -6,7 +6,7 @@ import ru.aureys.core.annotation.HandleEvent;
 import ru.aureys.core.annotation.Saga;
 
 @Slf4j
-@Saga
+//@Saga
 public class SimpleErrorSaga {
 
     @HandleEvent
