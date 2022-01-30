@@ -1,5 +1,8 @@
 package ru.aureys.core.bus;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -14,12 +17,14 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
+@Slf4j
 @Service
 public class ConcurrentBus implements IBus, AutoCloseable {
 
     private static final int DEFAULT_POOL_SIZE = 30;
 
     public ConcurrentBus(SpringAnnotationScanner scanner) {
+        log.debug("Initializing bus");
         this.eventRegistrations = scanner.registerEventHandlers();
         this.commandRegistrations = scanner.registerCommandHandlers();
     }
