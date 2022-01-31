@@ -1,4 +1,4 @@
-package ru.aureys.config;
+package ru.aureys.core.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -15,9 +15,11 @@ public class SimpleCommandHandler {
 
     @HandleCommand
     public void handle(SimpleCommand command, ExecutionContext execution) {
+        if (command.getUsefulData().equals("InvalidData"))
+            throw new IllegalArgumentException("Oopsie happened!");
+
         final SimpleEvent event = new SimpleEvent(format("Received useful data from command %s: %s",
                 command.getClass().getSimpleName(), command.getUsefulData()));
         execution.inContext(event);
-        throw new IllegalArgumentException("Oopsie happened!");
     }
 }
