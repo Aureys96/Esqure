@@ -32,7 +32,7 @@ public class SpringAnnotationScanner {
 
     public Map<Class<?>, Collection<Consumer<Object>>> registerEventHandlers() {
         final Map<Class<?>, Collection<Consumer<Object>>> registrations = new HashMap<>();
-        scanForEventHandlers(Saga.class, HandleEvent.class, registrations);
+        scanForEventHandlers(registrations);
         log.debug("Found {} registered event handlers", registrations.size());
 
         return registrations;
@@ -40,44 +40,42 @@ public class SpringAnnotationScanner {
 
     public Map<Class<?>, Collection<BiConsumer<Object, ExecutionContext>>> registerCommandHandlers() {
         final Map<Class<?>, Collection<BiConsumer<Object, ExecutionContext>>> registrations = new HashMap<>();
-        scanForCommandHandlers(Handler.class, HandleCommand.class, registrations);
+        scanForCommandHandlers(registrations);
         log.debug("Found {} registered command handlers", registrations.size());
 
         return registrations;
     }
 
-    private void scanForEventHandlers(Class<? extends Annotation> typeAnnotationForLookup,
-                                      Class<? extends Annotation> classAnnotationForLookup,
-                                      Map<Class<?>, Collection<Consumer<Object>>> eventRegistrations) {
+    private void scanForEventHandlers(Map<Class<?>, Collection<Consumer<Object>>> eventRegistrations) {
         final Map<String, Object> beansWithAnnotation =
-                applicationContext.getBeansWithAnnotation(typeAnnotationForLookup);
+                applicationContext.getBeansWithAnnotation(Saga.class);
 
         beansWithAnnotation.values().forEach(handler -> {
             final Method[] methods = handler.getClass().getDeclaredMethods();
             for (Method method : methods) {
-                if (AnnotationUtils.findAnnotation(method, classAnnotationForLookup) != null) {
-
-                    final Consumer<Object> consumer = (command) -> initHandle(handler, method, command);
-                    addEventRegistration(method.getParameterTypes()[0], consumer, eventRegistrations);
+                if (AnnotationUtils.findAnnotation(method, (Class<? extends Annotation>) HandleEvent.class) != null) {
+                    final Consumer<Object> consumer = (command) -> initHandleEvent(handler, method, command);
+                    Class<?> clazz = method.getParameterTypes()[0];
+                    eventRegistrations.putIfAbsent(clazz, new ArrayList<>());
+                    eventRegistrations.get(clazz).add(consumer);
 
                 }
             }
         });
     }
 
-    private void scanForCommandHandlers(Class<? extends Annotation> typeAnnotationForLookup,
-                                        Class<? extends Annotation> classAnnotationForLookup,
-                                        Map<Class<?>, Collection<BiConsumer<Object, ExecutionContext>>> commandRegistrations) {
+    private void scanForCommandHandlers(Map<Class<?>, Collection<BiConsumer<Object, ExecutionContext>>> commandRegistrations) {
         final Map<String, Object> beansWithAnnotation =
-                applicationContext.getBeansWithAnnotation(typeAnnotationForLookup);
-
+                applicationContext.getBeansWithAnnotation(Handler.class);
         beansWithAnnotation.values().forEach(handler -> {
             final Method[] methods = handler.getClass().getDeclaredMethods();
             for (Method method : methods) {
-                if (AnnotationUtils.findAnnotation(method, classAnnotationForLookup) != null) {
+                if (AnnotationUtils.findAnnotation(method, (Class<? extends Annotation>) HandleCommand.class) != null) {
                     final BiConsumer<Object, ExecutionContext> consumer =
                             (command, context) -> initHandleCommand(handler, method, command, context);
-                    addCommandRegistration(method.getParameterTypes()[0], consumer, commandRegistrations);
+                    Class<?> clazz = method.getParameterTypes()[0];
+                    commandRegistrations.putIfAbsent(clazz, new ArrayList<>());
+                    commandRegistrations.get(clazz).add(consumer);
                 }
             }
         });
@@ -89,20 +87,8 @@ public class SpringAnnotationScanner {
     }
 
     @SneakyThrows
-    private void initHandle(Object handler, Method method, Object command) {
+    private void initHandleEvent(Object handler, Method method, Object command) {
         method.invoke(handler, command);
-    }
-
-    public void addCommandRegistration(Class<?> clazz, BiConsumer<Object, ExecutionContext> consumer,
-                                       Map<Class<?>, Collection<BiConsumer<Object, ExecutionContext>>> registrations) {
-        registrations.putIfAbsent(clazz, new ArrayList<>());
-        registrations.get(clazz).add(consumer);
-    }
-
-    public void addEventRegistration(Class<?> clazz, Consumer<Object> consumer,
-                                     Map<Class<?>, Collection<Consumer<Object>>> registrations) {
-        registrations.putIfAbsent(clazz, new ArrayList<>());
-        registrations.get(clazz).add(consumer);
     }
 
 }
