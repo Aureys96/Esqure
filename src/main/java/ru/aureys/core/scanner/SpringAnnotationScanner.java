@@ -1,6 +1,5 @@
 package ru.aureys.core.scanner;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -12,6 +11,7 @@ import ru.aureys.core.annotation.Handler;
 import ru.aureys.core.annotation.Saga;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,14 +54,18 @@ public class SpringAnnotationScanner {
             final Method[] methods = handler.getClass().getDeclaredMethods();
             for (Method method : methods) {
                 if (AnnotationUtils.findAnnotation(method, (Class<? extends Annotation>) HandleEvent.class) != null) {
-                    final Consumer<Object> consumer = (command) -> initHandleEvent(handler, method, command);
-                    Class<?> clazz = method.getParameterTypes()[0];
-                    eventRegistrations.putIfAbsent(clazz, new ArrayList<>());
-                    eventRegistrations.get(clazz).add(consumer);
+                    registerHandlerMethod(eventRegistrations, handler, method);
 
                 }
             }
         });
+    }
+
+    private void registerHandlerMethod(Map<Class<?>, Collection<Consumer<Object>>> eventRegistrations, Object handler, Method method) {
+        final Consumer<Object> consumer = command -> initHandleEvent(handler, method, command);
+        Class<?> clazz = method.getParameterTypes()[0];
+        eventRegistrations.putIfAbsent(clazz, new ArrayList<>());
+        eventRegistrations.get(clazz).add(consumer);
     }
 
     private void scanForCommandHandlers(Map<Class<?>, Collection<BiConsumer<Object, ExecutionContext>>> commandRegistrations) {
@@ -81,14 +85,24 @@ public class SpringAnnotationScanner {
         });
     }
 
-    @SneakyThrows
     private void initHandleCommand(Object handler, Method method, Object command, ExecutionContext execution) {
-        method.invoke(handler, command, execution);
+        try {
+            method.invoke(handler, command, execution);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            log.error("Exception during command handler method registration", e);
+            log.error("Method that could not be registered {} for a command {}", method.getName(), command.getClass());
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     private void initHandleEvent(Object handler, Method method, Object command) {
-        method.invoke(handler, command);
+        try {
+            method.invoke(handler, command);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            log.error("Exception during event handler method registration", e);
+            log.error("Method that could not be registered {} for an event {}", method.getName(), command.getClass());
+            throw new RuntimeException(e);
+        }
     }
 
 }
